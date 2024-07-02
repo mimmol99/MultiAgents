@@ -58,6 +58,7 @@ def main():
             "timeout": 600,
             "cache_seed": 42,
             "config_list": config_list,
+            "max_consecutive_auto_reply":0
             #"customized_prompt":EVAL_CUSTOM_PROMPT
         }
     
@@ -72,11 +73,17 @@ def main():
     evaluator = UserProxyAgent(
         name="valutatore",
         human_input_mode="NEVER",
-        system_message="Devi valutare le risposte dell'assistente in base ad input,contesto e risposta.",
-        llm_config=llm_config
+        #system_message=" ",
+        llm_config=llm_eval_config
     )
 
-
+    assistant_evaluator = RetrieveAssistantAgent(
+        name = "assistant_evaluator",
+        human_input_mode="NEVER",
+        system_message="Devi valutare le risposte dell'assistente.",
+        llm_config=llm_eval_config
+    )
+     
     files_path = "/home/utente/Desktop/Projects/CHATBOT_YOLO/ALL_FILES/COMPANY/SUB"
     
     #loader = Loader(files_path)
@@ -124,15 +131,12 @@ def main():
         },
         code_execution_config=False,
     )
-
-
-
  
-
     assistant.reset()
 
     input_text  = ""
 
+    #gli indennizzi sono cumulabili?
     while input_text != "exit":
         input_text = input("insert input (""exit"" to esc):")
         if input_text == "exit": break
@@ -148,7 +152,7 @@ def main():
             input_answer=response_content
         )
 
-        eval_chat_result = evaluator.initiate_chat(evaluator, problem=evaluation_prompt)
+        eval_chat_result = assistant_evaluator.initiate_chat(assistant_evaluator, problem=evaluation_prompt)
         eval_response_content = eval_chat_result.chat_history[-1]['content']
         print("EVAL",eval_response_content)
     
