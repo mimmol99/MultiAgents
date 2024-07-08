@@ -8,4 +8,12 @@ This project implements a multi-agent system using Python. It utilizes the `auto
 ## Installation
 ```bash
 pip install -r requirements.txt
+```
 
+## Usage
+
+```bash
+python3 main.py
+```
+
+Insert the input using the terminal and you will see the agents chat flow. Insert "exit" to exit the loop.
