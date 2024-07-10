@@ -18,7 +18,7 @@ def main():
 
     
     config_list=[{
-        "model": "gpt-4-turbo",
+        "model": "gpt-4o",
         "api_key": os.environ.get("OPENAI_API_KEY"),
     }]
 
@@ -51,13 +51,13 @@ def main():
 
 
 
-    boss = autogen.UserProxyAgent(
-        name="Boss",
+    manager = autogen.UserProxyAgent(
+        name="Manager",
         is_termination_msg=termination_msg,
         human_input_mode="NEVER",
         code_execution_config=False,  # we don't want to execute code in this case.
         default_auto_reply="Rispondi solo `TERMINATE` se il task è finito",
-        description="Il boss che fa domande e fornisce i task.",
+        description="Il manager che fa domande e fornisce i task.",
     )
 
     ragproxyagent = QdrantRetrieveUserProxyAgent(
@@ -182,18 +182,18 @@ def main():
                 ret_msg = ragproxyagent.message_generator(ragproxyagent, None, _context)
             return ret_msg if ret_msg else message
 
-        ragproxyagent.human_input_mode = "NEVER"  # Disable human input for boss_aid since it only retrieves content.
+        ragproxyagent.human_input_mode = "NEVER"  # Disable human input for manager_aid since it only retrieves content.
 
         for caller in [assistant,evaluator,corrector]:
             d_retrieve_content = caller.register_for_llm(
                 description="Recupera il contesto per effettuare meglio il compito", api_style="function"
             )(retrieve_content)
 
-        for executor in [boss,ragproxyagent]:
+        for executor in [manager,ragproxyagent]:
             executor.register_for_execution()(d_retrieve_content)
 
         groupchat = autogen.GroupChat(
-            agents=[boss,ragproxyagent,assistant,evaluator,corrector,refiner],
+            agents=[manager,ragproxyagent,assistant,evaluator,corrector,refiner],
             messages=[],
             max_round=12,
             speaker_selection_method=custom_speaker_selection_func,
@@ -204,8 +204,8 @@ def main():
 
         manager = autogen.GroupChatManager(groupchat=groupchat, llm_config=llm_config)
 
-        # Start chatting with the boss as this is the user proxy agent.
-        boss.initiate_chat(
+        # Start chatting with the manager as this is the user proxy agent.
+        manager.initiate_chat(
             manager,
             message=user_input,
         )
